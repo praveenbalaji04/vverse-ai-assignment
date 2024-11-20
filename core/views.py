@@ -7,6 +7,7 @@ from core.models import Video
 from core.helpers import TrimVideo, MergeVideo
 
 from django.conf import settings
+from django.http import Http404
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -43,7 +44,7 @@ class UploadVideoAPI(APIView):
         frame_count = cv_video.get(cv.CAP_PROP_FRAME_COUNT)
         duration = frame_count / fps
 
-        if 5 <= duration <= 35:  # TODO change this to 25
+        if 5 <= duration <= 25:
             return True
         return False
 
@@ -114,7 +115,11 @@ class TrimVideoView(APIView):
             raise ValidationError({"error": "start should be less than end"})
 
         logger.info(f"trimming video with id: {video_id}, requested by user")
-        video_obj = Video.objects.get(id=video_id)  # if user is available, make sure video belongs to user.
+        try:
+            video_obj = Video.objects.get(id=video_id)  # if user is available, make sure video belongs to user.
+        except Video.DoesNotExist:
+            raise Http404("Video does not exist")
+
         cv_video = cv.VideoCapture(video_obj.file.path)
 
         if cv_video.isOpened():
@@ -130,7 +135,7 @@ class TrimVideoView(APIView):
 
         else:
             raise ValidationError({"error": "Invalid video file"})
-        return Response({"status": "trimmed"})
+        return Response({"status": "completed"})
 
 
 class MergeVideoView(APIView):
@@ -147,7 +152,7 @@ class MergeVideoView(APIView):
             raise ValidationError({"error": "video_ids should be a list of integers"})
 
         if len(video_ids) < 2:
-            raise ValidationError({"error": "at least 2 video_ids are required"})
+            return Response({"error": "at least 2 video_ids are required"}, status=status.HTTP_412_PRECONDITION_FAILED)
 
         logger.info(f"merging videos with ids: {video_ids}, requested by user")
         video_objects = Video.objects.filter(id__in=video_ids)
@@ -162,7 +167,7 @@ class MergeVideoView(APIView):
         logger.info(f"executing merge video with filename {output_path} for video ids {video_ids}")
         merge_video.execute()
 
-        return Response({"status": "merged"})
+        return Response({"status": "completed"})
 
 
 class FileLinkWithExpiryView(APIView):

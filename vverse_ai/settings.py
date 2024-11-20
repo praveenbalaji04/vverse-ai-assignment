@@ -85,6 +85,14 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("utils.auth.CustomAuthentication",),
 }
 
+LOGGING = {
+    "version": 1,
+    'disable_existing_loggers': False,
+    "root": {
+        "level": "INFO"
+    }
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators

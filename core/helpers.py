@@ -5,6 +5,7 @@ from core.models import Video
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 @dataclass
@@ -73,3 +74,49 @@ class TrimVideo:
             cv_video.release()
             out.release()
             logger.info(f"completed creating trimmed video with filename {self.output_path}")
+
+
+class MergeVideo:
+    def __init__(self, video_objects, output_path, video_ids):
+        self.video_objects = video_objects
+        self.output_path = output_path
+        self.video_ids = video_ids
+
+    def get_frame_info(self):
+
+        logger.info("fetching frame info for video to merge videos")
+        cv_video = cv.VideoCapture(self.video_objects.first().file.path) # using first video property for all videos
+        fps = cv_video.get(cv.CAP_PROP_FPS)
+        width = int(cv_video.get(cv.CAP_PROP_FRAME_WIDTH))
+        height = int(cv_video.get(cv.CAP_PROP_FRAME_HEIGHT))
+
+        cv_video.release()
+
+        frame_info = FrameInfo()
+        frame_info.fps = fps
+        frame_info.width = width
+        frame_info.height = height
+
+        return frame_info
+
+    def execute(self):
+        frame_info = self.get_frame_info()
+        fourcc = cv.VideoWriter_fourcc(*'mp4v')
+        out = cv.VideoWriter(self.output_path, fourcc, frame_info.fps, (frame_info.width, frame_info.height))
+
+        video_objects_path = {video.id: video.file.path for video in self.video_objects}
+        for _id in self.video_ids:  # making sure videos are fetched as per requested order
+            video_obj_path = video_objects_path.get(_id)
+            cv_video = cv.VideoCapture(video_obj_path)
+            logger.info(f"reading video file for merge. video_id: {_id}")
+
+            while True:
+                ret, frame = cv_video.read()
+                if not ret:
+                    break
+
+                frame = cv.resize(frame, (frame_info.width, frame_info.height))
+                out.write(frame)
+            cv_video.release()
+
+        out.release()

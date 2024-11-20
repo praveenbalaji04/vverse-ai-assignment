@@ -4,7 +4,7 @@ import logging
 import cv2 as cv
 
 from core.models import Video
-from core.helpers import TrimVideo
+from core.helpers import TrimVideo, MergeVideo
 
 from django.conf import settings
 
@@ -17,6 +17,7 @@ from rest_framework.parsers import MultiPartParser
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 @api_view(["GET"])
@@ -131,3 +132,43 @@ class TrimVideoView(APIView):
             raise ValidationError({"error": "Invalid video file"})
         return Response({"status": "trimmed"})
 
+
+class MergeVideoView(APIView):
+
+    def post(self, request):
+        """
+        payload:
+        files: [file1, file2, file3]
+        """
+        data = request.data
+
+        video_ids = data.get("video_ids")
+        if not isinstance(video_ids, list):
+            raise ValidationError({"error": "video_ids should be a list of integers"})
+
+        if len(video_ids) < 2:
+            raise ValidationError({"error": "at least 2 video_ids are required"})
+
+        logger.info(f"merging videos with ids: {video_ids}, requested by user")
+        video_objects = Video.objects.filter(id__in=video_ids)
+
+        if video_objects.count() != len(video_ids):
+            raise ValidationError({"error": "Invalid video_ids"})
+
+        output_path = os.path.join(settings.MEDIA_ROOT, f"merged_{str(secrets.token_hex(3))}.mp4")
+        logger.info(f"creating merge video with filename {output_path}")
+
+        merge_video = MergeVideo(video_objects, output_path, video_ids)
+        logger.info(f"executing merge video with filename {output_path} for video ids {video_ids}")
+        merge_video.execute()
+
+        return Response({"status": "merged"})
+
+
+class AWSPreSignedURL(APIView):
+
+    def get(self, request):
+        """
+        payload: {file_id: <int>}
+        """
+        pass

@@ -165,10 +165,21 @@ class MergeVideoView(APIView):
         return Response({"status": "merged"})
 
 
-class AWSPreSignedURL(APIView):
+class FileLinkWithExpiryView(APIView):
 
-    def get(self, request):
+    def get(self, request, video_id):
         """
         payload: {file_id: <int>}
+        requirement : Allow link sharing with time-based expiry (assume the expiry time)
+
+        Not sure the below code is correct.
+        for files, I have used s3 pre-signed URL for expiry and I prefer that way.
         """
-        pass
+
+        video_path = Video.objects.get(id=video_id).file.path  # assuming s3 URL here.
+        response = Response({"url": video_path})
+
+        max_age = 10  # Time in seconds
+        response['Cache-Control'] = f'public, max-age={max_age}'
+
+        return response

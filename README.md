@@ -22,8 +22,7 @@ This project consists of code to read, trim and merge video files using OpenCV l
 
 
 # API
-- Refer postman collection (Import the file using postman)
-
+- Refer postman collection (Import the file `Video-verse-opencv.postman_collection` using postman)
 
 # Testcases
 - Added test cases for all the API

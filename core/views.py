@@ -128,14 +128,11 @@ class TrimVideoView(APIView):
             logger.info(f"creating trimmed video with filename {output_path}")
 
             trim_video = TrimVideo(video_obj, start, end, output_path)
-            try:
-                trim_video.execute()
-            except ValueError as e:
-                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            trim_video.execute()
 
         else:
             raise ValidationError({"error": "Invalid video file"})
-        return Response({"status": "completed"})
+        return Response({"status": "completed", "output_path": output_path})
 
 
 class MergeVideoView(APIView):
@@ -167,7 +164,7 @@ class MergeVideoView(APIView):
         logger.info(f"executing merge video with filename {output_path} for video ids {video_ids}")
         merge_video.execute()
 
-        return Response({"status": "completed"})
+        return Response({"status": "completed", "output_path": output_path})
 
 
 class FileLinkWithExpiryView(APIView):

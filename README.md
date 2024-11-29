@@ -28,6 +28,7 @@ This project consists of code to read, trim and merge video files using OpenCV l
 - Added test cases for all the API
 - To run test : `python manage.py test -v 2` ( Test takes approx 400 seconds to complete due to creating mock video files
 - For coverage test : `coverage run manage.py test`
+- Run `coverage html` to create html coverage report
 
 # Coverage
 - Coverage percent : 98%

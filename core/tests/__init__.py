@@ -10,7 +10,6 @@ def create_mock_video(duration=10, size=(640, 480), frame_rate=30):
         """
         Create a mock video file for testing.
         """
-        frame_rate = frame_rate
         frame_width, frame_height = size
         test_media_dir = settings.TEST_MEDIA_ROOT
         file_path = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False, dir=test_media_dir).name

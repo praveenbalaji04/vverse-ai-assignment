@@ -7,6 +7,14 @@ import sys
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vverse_ai.settings')
+
+    try:
+        os.mkdir('test_media')
+    except FileExistsError:
+        pass
+
+    os.makedirs('media/videos', exist_ok=True)
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
